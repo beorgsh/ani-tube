@@ -24,21 +24,21 @@ export const getAnimeInfo = async (anime_session: string) => {
   return res.data;
 };
 
-// 🔥 Wrapped with a CORS proxy
+// 🔥 FIXED: Uses your own backend as a proxy
 export const getHiAnimeEpisodes = async (anilistId: string | number) => {
-  const targetUrl = encodeURIComponent(
-    `https://anilistmapper.vercel.app/hianime/${anilistId}`,
+  const target = `https://anilistmapper.vercel.app/hianime/${anilistId}`;
+  const res = await axios.get(
+    `${BASE}/proxy-mapper?url=${encodeURIComponent(target)}`,
   );
-  const res = await axios.get(`https://corsproxy.io/?${targetUrl}`);
   return res.data;
 };
 
-// 🔥 Wrapped with a CORS proxy
+// 🔥 FIXED: Uses your own backend as a proxy
 export const getAnimePaheEpisodes = async (anilistId: string | number) => {
-  const targetUrl = encodeURIComponent(
-    `https://anilistmapper.vercel.app/animepahe/map/${anilistId}`,
+  const target = `https://anilistmapper.vercel.app/animepahe/map/${anilistId}`;
+  const res = await axios.get(
+    `${BASE}/proxy-mapper?url=${encodeURIComponent(target)}`,
   );
-  const res = await axios.get(`https://corsproxy.io/?${targetUrl}`);
   return res.data;
 };
 

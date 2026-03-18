@@ -40,51 +40,55 @@ export default function PlayerPage() {
   useEffect(() => {
     async function fetchEpisodes() {
       if (!anime_session) return;
+      const BACKEND_BASE = "https://catapang1989-aniscrap.hf.space";
+
       try {
         setLoading(true);
         setHianimeInfo(null);
         setAnimeInfo(null);
         setDescExpanded(false);
 
-        // 1. Fetch Primary Anime Info
+        // 1. Fetch Primary Anime Info from your backend
         const infoRes = await getAnimeInfo(anime_session);
         if (infoRes) setAnimeInfo(infoRes);
 
         let anilistId = infoRes?.id || infoRes?.ids?.anilist;
 
-        // 🔥 FALLBACK RETRY LOGIC 🔥
-        // If anilistId is missing, try to get it from the mapper directly
+        // 🔥 FALLBACK RETRY LOGIC (Proxied through your backend)
         if (!anilistId) {
-          console.warn(
-            "Anilist ID not found in primary backend. Retrying fallback mapper...",
-          );
+          console.warn("Anilist ID not found. Retrying via proxy...");
           try {
-            // Note: We use the anime_session as the lookup key in the mapper
-            const fallbackRes = await fetch(
+            const target = encodeURIComponent(
               `https://anilistmapper.vercel.app/animepahe/map/${anime_session}`,
+            );
+            const fallbackRes = await fetch(
+              `${BACKEND_BASE}/proxy-mapper?url=${target}`,
             ).then((res) => (res.ok ? res.json() : null));
 
-            // Adjust this based on what the mapper returns (usually it returns a JSON with anilistId)
             anilistId = fallbackRes?.anilistId || fallbackRes?.id;
           } catch (fallbackErr) {
             console.error("Fallback mapper failed:", fallbackErr);
           }
         }
 
-        // Final check: if still no ID, we have to stop
         if (!anilistId)
           throw new Error("Anilist ID could not be found after retry.");
 
-        // 2. Fetch HiAnime ID and Seasons safely (using the ID we just found)
-        fetch(`https://anilistmapper.vercel.app/hianime/${anilistId}`)
+        // 2. Fetch HiAnime ID and Seasons (Proxied through your backend)
+        const hiMapperTarget = encodeURIComponent(
+          `https://anilistmapper.vercel.app/hianime/${anilistId}`,
+        );
+
+        fetch(`${BACKEND_BASE}/proxy-mapper?url=${hiMapperTarget}`)
           .then((res) => (res.ok ? res.json() : null))
           .then((mapperRes) => {
             if (!mapperRes) return null;
             const hiId = mapperRes?.hianimeId || mapperRes?.id;
             if (hiId) {
-              return fetch(
-                `https://catapang1989-aniscrap.hf.space/seasons/${hiId}`,
-              ).then((r) => (r.ok ? r.json() : null));
+              // This is already your backend, no proxy needed for the seasons endpoint itself
+              return fetch(`${BACKEND_BASE}/seasons/${hiId}`).then((r) =>
+                r.ok ? r.json() : null,
+              );
             }
             return null;
           })
@@ -95,7 +99,8 @@ export default function PlayerPage() {
             console.log("Seasons fetching bypassed:", err.message),
           );
 
-        // 3. Fetch Episode Lists
+        // 3. Fetch Episode Lists (These use getHiAnimeEpisodes/getAnimePaheEpisodes
+        // which you should have already updated in api.ts to use the proxy)
         const [hiRes, paheRes] = await Promise.allSettled([
           getHiAnimeEpisodes(anilistId),
           getAnimePaheEpisodes(anilistId),
@@ -105,7 +110,6 @@ export default function PlayerPage() {
         const paheDataRaw =
           paheRes.status === "fulfilled" ? paheRes.value : null;
 
-        // Extraction logic
         const safelyExtractArray = (data: any): any[] => {
           if (!data) return [];
           if (Array.isArray(data)) return data;
@@ -156,7 +160,7 @@ export default function PlayerPage() {
         }
       } catch (error: any) {
         console.error("Error fetching player data:", error);
-        setVideoError(error.message); // Displays the error in the player area
+        setVideoError(error.message);
       } finally {
         setLoading(false);
       }
