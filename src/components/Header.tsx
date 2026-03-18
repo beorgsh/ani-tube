@@ -62,7 +62,7 @@ const Header = () => {
         try {
           const data = await searchAnime(searchQuery);
           // Adjust based on API structure
-          setResults(data?.results || data || []);
+          setResults(Array.isArray(data) ? data : (data as any).results || []);
         } catch (err) {
           console.error("Search failed", err);
           setResults([]);

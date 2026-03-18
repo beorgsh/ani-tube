@@ -18,7 +18,6 @@ export const resolveVideo = async (
   );
   return res.data;
 };
-
 // 🔥 CHANGED: Now calls the `/info/` endpoint to get the ID AND all the anime details!
 export const getAnimeInfo = async (anime_session: string) => {
   const res = await axios.get(`${BASE}/info/${anime_session}`);

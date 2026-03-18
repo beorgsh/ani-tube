@@ -178,11 +178,13 @@ export default function PlayerPage() {
     setVideoStreams({ sub: null, dub: null });
 
     try {
-      const videoData = await resolveVideo(anime_session!, episode.paheSession);
+      const videoData = (await resolveVideo(
+        anime_session!,
+        episode.paheSession,
+      )) as any;
 
-      const subStream =
-        videoData.sub?.download || videoData.sub?.link || videoData.url || null;
-      const dubStream = videoData.dub?.download || videoData.dub?.link || null;
+      const subStream = videoData.sub?.download || videoData.sub?.url || null;
+      const dubStream = videoData.dub?.download || videoData.dub?.url || null;
 
       setVideoStreams({ sub: subStream, dub: dubStream });
 

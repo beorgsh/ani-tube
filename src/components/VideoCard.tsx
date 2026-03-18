@@ -157,7 +157,10 @@ export default function VideoCard({ item, onClick }: Props) {
     if (!item?.anime_session || !item?.session || loading) return;
     setLoading(true);
     try {
-      const data = await resolveVideo(item.anime_session, item.session);
+      const data = (await resolveVideo(
+        item.anime_session,
+        item.session,
+      )) as any;
 
       // 🔥 PRIORITIZE THE MP4 DOWNLOAD LINK OVER THE M3U8 STREAM
       const streamUrl =
